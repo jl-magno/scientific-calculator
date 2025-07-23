@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Scientific Calculator</title>
+    <style>
+        :root {
+            --bg-dark: #1a1a2e;
+            --bg-darker: #16213e;
+            --primary: #0f3460;
+            --accent: #00b4d8;
+            --accent-light: #90e0ef;
+            --danger: #ff2d75;
+            --success: #06d6a0;
+            --text: #e2f3f5;
+            --text-dim: #a8dadc;
+            --button-bg: #2a2a4a;
+            --button-hover: #3d3d5a;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: var(--bg-dark);
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            color: var(--text);
+        }
+        
+        .calculator {
+            width: 340px;
+            background: var(--bg-darker);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+        }
+        
+        .display-container {
+            padding: 25px 20px;
+            background: linear-gradient(to bottom, #0f172a, #1e293b);
+            text-align: right;
+            position: relative;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .previous-operation {
+            min-height: 24px;
+            font-size: 0.9em;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+            word-wrap: break-word;
+            opacity: 0.8;
+            font-weight: 300;
+        }
+        
+        .current-display {
+            font-size: 2.5em;
+            font-weight: 300;
+            word-wrap: break-word;
+            letter-spacing: 1px;
+        }
+        
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            padding: 20px;
+        }
+        
+        .basic-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            padding: 20px;
+        }
+        
+        button {
+            padding: 16px 0;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            background: var(--button-bg);
+            color: var(--text);
+            transition: all 0.2s ease;
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(255, 255, 255, 0.1), transparent);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            background: var(--button-hover);
+        }
+        
+        button:hover::before {
+            opacity: 1;
+        }
+        
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .number {
+            background: var(--primary);
+        }
+        
+        .number:hover {
+            background: #1a3a6e;
+        }
+        
+        .operator {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .operator:hover {
+            background: var(--accent-light);
+            color: var(--bg-dark);
+        }
+        
+        .equals {
+            background: var(--success);
+            color: white;
+        }
+        
+        .equals:hover {
+            background: #05c191;
+        }
+        
+        .clear {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .clear:hover {
+            background: #ff1a6b;
+        }
+        
+        .function {
+            background: #3a3a5d;
+            font-size: 0.9em;
+        }
+        
+        .function:hover {
+            background: #4a4a6d;
+        }
+        
+        .zero {
+            grid-column: span 2;
+        }
+        
+        .mode {
+            background: #6a4c93;
+            color: white;
+        }
+        
+        .mode:hover {
+            background: #7d5ba6;
+        }
+        
+        .scientific-btn {
+            background: #3a3a6d;
+            font-size: 0.85em;
+            padding: 14px 0;
+        }
+        
+        .scientific-btn:hover {
+            background: #4a4a7d;
+        }
+        
+        .scientific-panel {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+        }
+        
+        .scientific-panel.show {
+            max-height: 300px;
+            padding: 20px;
+        }
+        
+        .angle-indicator {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            font-size: 0.8em;
+            color: var(--accent);
+            background: rgba(0, 180, 216, 0.1);
+            padding: 3px 8px;
+            border-radius: 10px;
+        }
+        
+        @media (max-width: 400px) {
+            .calculator {
+                width: 100%;
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="display-container">
+            <div class="angle-indicator" id="angle-indicator">RAD</div>
+            <div class="previous-operation" id="previous-operation"></div>
+            <div class="current-display" id="current-display">0</div>
+        </div>
+        
+        <div class="scientific-panel" id="scientific-panel">
+            <button class="scientific-btn" onclick="handleScientific('2nd')">2nd</button>
+            <button class="scientific-btn" onclick="handleScientific('1/')">1/x</button>
+            <button class="scientific-btn" onclick="factorial()">x!</button>
+            <button class="scientific-btn" onclick="handleScientific('Math.sin(')">sin</button>
+            <button class="scientific-btn" onclick="handleScientific('Math.sinh(')">sinh</button>
+            
+            <button class="scientific-btn" onclick="toggleAngleMode()" id="angle-mode">Rad</button>
+            <button class="scientific-btn" onclick="appendToDisplay('(')">(</button>
+            <button class="scientific-btn" onclick="appendToDisplay(')')">)</button>
+            <button class="scientific-btn" onclick="appendToDisplay('**2')">x²</button>
+            <button class="scientific-btn" onclick="handleScientific('Math.sqrt(')">√</button>
+            
+            <button class="scientific-btn" onclick="handleScientific('Math.cos(')">cos</button>
+            <button class="scientific-btn" onclick="handleScientific('Math.cosh(')">cosh</button>
+            <button class="scientific-btn" onclick="appendToDisplay('Math.PI')">π</button>
+            <button class="scientific-btn" onclick="handleScientific('10**')">10^x</button>
+            <button class="scientific-btn" onclick="appendToDisplay('**')">y^x</button>
+            
+            <button class="scientific-btn" onclick="handleScientific('Math.log10(')">lg</button>
+            <button class="scientific-btn" onclick="handleScientific('Math.log(')">ln</button>
+            <button class="scientific-btn" onclick="handleScientific('Math.exp(')">e^x</button>
+            <button class="scientific-btn" onclick="randomNumber()">Rand</button>
+        </div>
+        
+        <div class="basic-buttons">
+            <button class="clear" onclick="clearAll()">AC</button>
+            <button class="function" onclick="backspace()">⌫</button>
+            <button class="function" onclick="appendToDisplay('%')">%</button>
+            <button class="operator" onclick="appendOperator('/')">÷</button>
+            
+            <button class="number" onclick="appendNumber('7')">7</button>
+            <button class="number" onclick="appendNumber('8')">8</button>
+            <button class="number" onclick="appendNumber('9')">9</button>
+            <button class="operator" onclick="appendOperator('*')">×</button>
+            
+            <button class="number" onclick="appendNumber('4')">4</button>
+            <button class="number" onclick="appendNumber('5')">5</button>
+            <button class="number" onclick="appendNumber('6')">6</button>
+            <button class="operator" onclick="appendOperator('-')">-</button>
+            
+            <button class="number" onclick="appendNumber('1')">1</button>
+            <button class="number" onclick="appendNumber('2')">2</button>
+            <button class="number" onclick="appendNumber('3')">3</button>
+            <button class="operator" onclick="appendOperator('+')">+</button>
+            
+            <button class="number zero" onclick="appendNumber('0')">0</button>
+            <button class="function" onclick="appendToDisplay('.')">.</button>
+            <button class="mode" onclick="toggleScientific()">SCI</button>
+            <button class="equals" onclick="calculate()">=</button>
+        </div>
+    </div>
+
+    <script>
+        // All JavaScript remains exactly the same as in your previous version
+        let currentInput = '0';
+        let previousInput = '';
+        let operation = null;
+        let angleMode = 'Rad'; // 'Rad' or 'Deg'
+        let scientificVisible = false;
+        
+        const currentDisplay = document.getElementById('current-display');
+        const previousOperation = document.getElementById('previous-operation');
+        const scientificPanel = document.getElementById('scientific-panel');
+        const angleModeBtn = document.getElementById('angle-mode');
+        const angleIndicator = document.getElementById('angle-indicator');
+        
+        function updateDisplay() {
+            currentDisplay.textContent = currentInput;
+            previousOperation.textContent = previousInput;
+        }
+        
+        function appendNumber(number) {
+            if (currentInput === '0' && number !== '.') {
+                currentInput = number;
+            } else if (number === '.' && currentInput.includes('.')) {
+                return;
+            } else {
+                currentInput += number;
+            }
+            updateDisplay();
+        }
+        
+        function appendOperator(operator) {
+            if (operation !== null) calculate();
+            previousInput = currentInput + ' ' + operator;
+            operation = operator;
+            currentInput = '0';
+            updateDisplay();
+        }
+        
+        function appendToDisplay(value) {
+            if (currentInput === '0') {
+                currentInput = value;
+            } else {
+                currentInput += value;
+            }
+            updateDisplay();
+        }
+        
+        function handleScientific(func) {
+            if (func === '2nd') {
+                // Implement secondary functions if needed
+                return;
+            }
+            
+            if (func.includes('Math.sin') || func.includes('Math.cos') || func.includes('Math.tan')) {
+                let angle = parseFloat(currentInput);
+                if (angleMode === 'Deg') {
+                    angle = angle * Math.PI / 180;
+                }
+                currentInput = eval(func + angle + ')').toString();
+            } else if (func === '1/') {
+                currentInput = (1 / parseFloat(currentInput)).toString();
+            } else {
+                currentInput = func + currentInput + (func.endsWith('(') ? ')' : '');
+            }
+            updateDisplay();
+        }
+        
+        function clearAll() {
+            currentInput = '0';
+            previousInput = '';
+            operation = null;
+            updateDisplay();
+        }
+        
+        function backspace() {
+            if (currentInput.length === 1) {
+                currentInput = '0';
+            } else {
+                currentInput = currentInput.slice(0, -1);
+            }
+            updateDisplay();
+        }
+        
+        function factorial() {
+            let num = parseFloat(currentInput);
+            if (num < 0 || !Number.isInteger(num)) {
+                currentInput = 'Error';
+                updateDisplay();
+                return;
+            }
+            let result = 1;
+            for (let i = 2; i <= num; i++) {
+                result *= i;
+            }
+            currentInput = result.toString();
+            updateDisplay();
+        }
+        
+        function randomNumber() {
+            currentInput = Math.random().toString();
+            updateDisplay();
+        }
+        
+        function toggleAngleMode() {
+            angleMode = angleMode === 'Rad' ? 'Deg' : 'Rad';
+            angleModeBtn.textContent = angleMode;
+            angleIndicator.textContent = angleMode.toUpperCase();
+        }
+        
+        function toggleScientific() {
+            scientificVisible = !scientificVisible;
+            scientificPanel.classList.toggle('show');
+        }
+        
+        function calculate() {
+            let computation;
+            const prev = parseFloat(previousInput);
+            const current = parseFloat(currentInput);
+            
+            if (isNaN(prev) || isNaN(current)) return;
+            
+            try {
+                switch (operation) {
+                    case '+':
+                        computation = prev + current;
+                        break;
+                    case '-':
+                        computation = prev - current;
+                        break;
+                    case '*':
+                        computation = prev * current;
+                        break;
+                    case '/':
+                        computation = prev / current;
+                        break;
+                    default:
+                        computation = eval(currentInput);
+                }
+                
+                currentInput = computation.toString();
+                operation = null;
+                previousInput = '';
+                updateDisplay();
+            } catch (error) {
+                currentInput = 'Error';
+                updateDisplay();
+            }
+        }
+        
+        // Keyboard support
+        document.addEventListener('keydown', (e) => {
+            if (/[0-9.]/.test(e.key)) {
+                e.preventDefault();
+                appendNumber(e.key);
+            } else if (['+', '-', '*', '/'].includes(e.key)) {
+                e.preventDefault();
+                appendOperator(e.key);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                calculate();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                clearAll();
+            } else if (e.key === 'Backspace') {
+                e.preventDefault();
+                backspace();
+            }
+        });
+        
+        // Initialize display
+        updateDisplay();
+        angleIndicator.textContent = angleMode.toUpperCase();
+    </script>
+</body>
+</html>
